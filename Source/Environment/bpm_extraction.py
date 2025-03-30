@@ -1,9 +1,13 @@
 import librosa
 
-# Load the audio file (replace 'audio_file_path' with the actual file path)
-y, sr = librosa.load('Source\\Environment\\output.wav')
 
-# Extract tempo (BPM)
-tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
+def find_tempo(path):
+    # Load the audio file 
+    y, sr = librosa.load(path)
 
-print(f"Tempo: {tempo} BPM")
+    # Extract tempo (BPM)
+    tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
+
+    return tempo
+
+print(find_tempo("Source/Environment/output.wav"))
