@@ -67,7 +67,7 @@ const App: React.FC = () => {
       </View>
 
 
-      <StatusBar style="auto" />
+      <StatusBar style='light' />
     </View>
     </TouchableWithoutFeedback>
   );
