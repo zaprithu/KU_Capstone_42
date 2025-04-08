@@ -1,10 +1,11 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, Image, Button, Alert, TouchableOpacity, TouchableWithoutFeedback, Keyboard } from 'react-native';
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import * as Network from 'expo-network';
 
 import IpInput from './IpInput';
 import PortInput from './PortInput';
+import ListenButton from './ListenButton';
 
 const Separator = () => <View style={styles.separator} />;
 
@@ -22,53 +23,40 @@ const App: React.FC = () => {
     }
   };
 
+  const handleIpInputChange = (value: string) => {
+    setServerIpAddr(value);
+  };
+
+  const handlePortInputChange = (value: number) => {
+    setServerPort(value);
+  };
+
   useEffect(() => {
     getIpAddress();
   }, []);
+
   return (
     <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-    <View style={styles.container}>
-      <View style={styles.logoContainer}>
-        <Image
-          source={require('./assets/logo.png')} 
-          style={styles.logo}
-        />
-      </View>
-
-      <View style={styles.infoContainer}>
-        {/* <View style={styles.infoRow}>
-          <Text style={[styles.greenText, styles.underline]}>User</Text>
-          <View style={styles.inline}>
-            <Text style={styles.greenText}>IP: </Text>
-            <Text style={styles.whiteText}>{clientIpAddr ? clientIpAddr : '...'}</Text>
-          </View>
+      <View style={styles.container}>
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('./assets/logo.png')}
+            style={styles.logo}
+          />
         </View>
-        {/* <Separator/> */}
-        {/* <Text>{'\n'}</Text> */} 
-        {/* <View style={styles.infoRow}> */}
-          {/* <Text style={[styles.greenText, styles.underline]}>Server</Text>
-          <View style={styles.inline}>
-            <Text style={styles.greenText}>IP:     </Text>
-            <Text style={styles.whiteText}>{serverIpAddr ? serverIpAddr : '...'}</Text>
-          </View>
-          <View style={styles.inline}>
-            <Text style={styles.greenText}>Port: </Text>
-            <Text style={styles.whiteText}>{serverPort ? serverPort : '...'}</Text>
-          </View> */}
-          <IpInput/>
-          <PortInput/>
-        {/* </View> */}
-      </View>
-      
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.listenButton} onPress={()=>{Alert.alert("PRESSED")}}>
-          <Text style={styles.listenButtonText}>Start Listening</Text>
-        </TouchableOpacity>
-      </View>
+
+        <View style={styles.infoContainer}>
+          <IpInput passToParent={handleIpInputChange}/>
+          <PortInput passToParent={handlePortInputChange}/>
+        </View>
+
+        <View style={styles.buttonContainer}>
+          <ListenButton/>
+        </View>
 
 
-      <StatusBar style='light' />
-    </View>
+        <StatusBar style='light' />
+      </View>
     </TouchableWithoutFeedback>
   );
 }
@@ -98,7 +86,7 @@ const styles = StyleSheet.create({
   underline: {
     textDecorationLine: 'underline'
   },
-  logo: { 
+  logo: {
     objectFit: 'contain',
     width: 200,
     height: 200,
@@ -147,6 +135,10 @@ const styles = StyleSheet.create({
   },
   listenButtonText: {
     fontSize: 22,
+    fontWeight: 'bold'
+  },
+  serverAddr: {
+    fontSize: 14,
     fontWeight: 'bold'
   }
 });

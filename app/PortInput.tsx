@@ -1,8 +1,11 @@
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import React, { useState, useEffect } from 'react';
 
+interface IPortInputProps {
+    passToParent: (value: number) => void;
+}
 
-const PortInput: React.FC = () => {
+const PortInput: React.FC<IPortInputProps> = ({passToParent}) => {
     const [text, setText] = useState<string>('');
     const [errorString, setErrorString] = useState<string | null >(null);
 
@@ -18,12 +21,14 @@ const PortInput: React.FC = () => {
         } else {
             setErrorString(null);
         }
-
-        return text;
+        const numVal = parseInt(text);
+        return numVal;
     }
 
     const changeHandler = (value: string) => {
-        setText(autoCorrect(value));
+        const correctedValue = autoCorrect(value);
+        setText(correctedValue.toString());
+        passToParent(correctedValue);
     }
 
     return (

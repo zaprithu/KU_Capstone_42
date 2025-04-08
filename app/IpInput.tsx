@@ -1,11 +1,13 @@
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import React, { useState, useEffect } from 'react';
 
+interface IIpInputProps {
+    passToParent: (value: string) => void;
+}
 
-const IpInput: React.FC = () => {
+const IpInput: React.FC<IIpInputProps> = ({passToParent}) => {
     const [text, setText] = useState<string>('');
     const [errorStrings, setErrorStrings] = useState<string[]>(['', '', '', '']);
-
 
     const autoCorrect = (text: string) => {
         // only allow digits and .
@@ -58,7 +60,9 @@ const IpInput: React.FC = () => {
     }
 
     const changeHandler = (value: string) => {
-        setText(autoCorrect(value));
+        const correctedValue = autoCorrect(value);
+        setText(correctedValue);
+        passToParent(correctedValue);
     }
 
     return (
