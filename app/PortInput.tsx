@@ -2,19 +2,25 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 import React, { useState, useEffect } from 'react';
 
 interface IPortInputProps {
-    passToParent: (value: number) => void;
+    passToParent: (data: PortInputData) => void,
+    initialData: PortInputData
 }
 
-const PortInput: React.FC<IPortInputProps> = ({passToParent}) => {
+export interface PortInputData {
+    value: number | null,
+    valid: boolean
+}
+
+const PortInput: React.FC<IPortInputProps> = ({ passToParent, initialData }) => {
     const [text, setText] = useState<string>('');
-    const [errorString, setErrorString] = useState<string | null >(null);
+    const [errorString, setErrorString] = useState<string | null>(null);
 
 
     const autoCorrect = (text: string) => {
         // only allow digits and .
         text = text.replace(/[^0-9.]/g, '');
         if (text.length > 4) {
-            text = text.slice(0,4);
+            text = text.slice(0, 4);
         }
         if (text.length !== 4) {
             setErrorString("ERROR: Port number must be four digits!");
@@ -25,11 +31,25 @@ const PortInput: React.FC<IPortInputProps> = ({passToParent}) => {
         return numVal;
     }
 
+    const checkValid = (value: string): boolean => {
+        return value.length !== 4 ? false : true;
+    }
+
     const changeHandler = (value: string) => {
         const correctedValue = autoCorrect(value);
         setText(correctedValue.toString());
-        passToParent(correctedValue);
+        passToParent({ value: correctedValue, valid: checkValid(value.toString()) });
     }
+
+    useEffect(() => {
+        
+        console.log("init port", typeof (initialData), initialData)
+        if (Number.isNaN(initialData.value))
+            setText('');
+        else if (initialData.value !== null)
+            setText(initialData.value.toString());
+        // setText('')
+    }, [initialData])
 
     return (
         <View style={styles.container}>
@@ -42,7 +62,7 @@ const PortInput: React.FC<IPortInputProps> = ({passToParent}) => {
                 placeholderTextColor={'#e7e7e7'}
                 keyboardType={'number-pad'}
             />
-            {errorString && 
+            {errorString &&
                 <Text style={styles.errorText} key={`errStrPort`}>{errorString}</Text>}
         </View>
     )
@@ -76,7 +96,7 @@ const styles = StyleSheet.create({
         paddingLeft: 10,
         color: '#e7e7e7',
         fontSize: 14,
-        width:150
+        width: 150
     },
     errorText: {
         color: 'red'

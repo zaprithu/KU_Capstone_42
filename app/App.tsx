@@ -1,38 +1,120 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Image, Button, Alert, TouchableOpacity, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { StyleSheet, View, Image, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import * as Network from 'expo-network';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import IpInput from './IpInput';
-import PortInput from './PortInput';
+const saveIpAndPort = async (ip: string, port: number) => {
+  try {
+    await AsyncStorage.setItem('ip', ip);
+    await AsyncStorage.setItem('port', port.toString()); // storing as string
+  } catch (error) {
+    console.error("Failed to save IP and Port", error);
+  }
+};
+
+
+import IpInput, { IpInputData } from './IpInput';
+import PortInput, { PortInputData } from './PortInput';
 import ListenButton from './ListenButton';
 
 const Separator = () => <View style={styles.separator} />;
 
 const App: React.FC = () => {
-  const [clientIpAddr, setClientIpAddr] = useState<string | null>(null);
   const [serverIpAddr, setServerIpAddr] = useState<string | null>(null);
   const [serverPort, setServerPort] = useState<number | null>(null);
+  const [validIp, setValidIp] = useState<boolean>(false);
+  const [validPort, setValidPort] = useState<boolean>(false);
 
-  const getIpAddress = async () => {
+  const loadIp = async (): Promise<IpInputData> => {
     try {
-      const ip = await Network.getIpAddressAsync();
-      setClientIpAddr(ip);
+      const value = await AsyncStorage.getItem('ipValue');
+      const valid = await AsyncStorage.getItem('ipValid');
+
+      // If both values exist, return them
+      if (value !== null && valid !== null) {
+        return { value: value, valid: JSON.parse(valid) };
+      } else {
+        // Return default values if nothing is found
+        return { value: null, valid: false };
+      }
     } catch (error) {
-      console.error("Error getting IP address:", error);
+      console.error("Failed to load IP", error);
+      return { value: null, valid: false }; // return default values in case of an error
     }
   };
 
-  const handleIpInputChange = (value: string) => {
-    setServerIpAddr(value);
+  const loadPort = async (): Promise<PortInputData> => {
+    try {
+      const value = await AsyncStorage.getItem('portValue');
+      const valid = await AsyncStorage.getItem('portValid');
+
+      // If both values exist, return them
+      if (value !== null && valid !== null) {
+        return { value: Number(value), valid: JSON.parse(valid) };
+      } else {
+        // Return default values if nothing is found
+        return { value: null, valid: false };
+      }
+    } catch (error) {
+      console.error("Failed to load Port", error);
+      return { value: null, valid: false }; // return default values in case of an error
+    }
   };
 
-  const handlePortInputChange = (value: number) => {
-    setServerPort(value);
+  const saveIp = async (data: IpInputData) => {
+    if (!data.value)
+      return;
+
+    try {
+      await AsyncStorage.setItem('ipValue', data.value);
+      await AsyncStorage.setItem('ipValid', data.valid.toString());
+    } catch (error) {
+      console.error("Failed to save IP", error);
+    }
+  }
+
+  const savePort = async (data: PortInputData) => {
+    if (!data.value)
+      return;
+
+    try {
+      await AsyncStorage.setItem('portValue', data.value.toString());
+      await AsyncStorage.setItem('portValid', data.valid.toString());
+    } catch (error) {
+      console.error("Failed to save Port", error);
+    }
+  }
+
+  const handleIpInputChange = (data: IpInputData) => {
+    setServerIpAddr(data.value);
+    setValidIp(data.valid);
+    if (data.valid === true)
+      saveIp(data);
+  };
+
+  const handlePortInputChange = (data: PortInputData) => {
+    setServerPort(data.value);
+    setValidPort(data.valid);
+    if (data.valid === true)
+      savePort(data);
   };
 
   useEffect(() => {
-    getIpAddress();
+    const fetchIpData = async () => {
+      const ipData = await loadIp();
+      setServerIpAddr(ipData.value);
+      setValidIp(ipData.valid);
+    };
+
+    const fetchPortData = async () => {
+      const portData = await loadPort();
+      setServerPort(portData.value);
+      setValidPort(portData.valid);
+    }
+
+    fetchIpData();
+    fetchPortData()
   }, []);
 
   return (
@@ -46,12 +128,20 @@ const App: React.FC = () => {
         </View>
 
         <View style={styles.infoContainer}>
-          <IpInput passToParent={handleIpInputChange}/>
-          <PortInput passToParent={handlePortInputChange}/>
+          <IpInput
+            passToParent={handleIpInputChange}
+            initialData={{ value: serverIpAddr, valid: validIp }}
+            />
+          <PortInput 
+            passToParent={handlePortInputChange} 
+            initialData={{ value: Number(serverPort), valid: validPort }} 
+            />
         </View>
 
         <View style={styles.buttonContainer}>
-          <ListenButton ip={serverIpAddr} port={serverPort}/>
+          <ListenButton
+            ip={{ value: serverIpAddr, valid: validIp }}
+            port={{ value: serverPort, valid: validPort }} />
         </View>
 
 
@@ -119,7 +209,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     width: 200,
     height: 200,
-    textAlign:'center'
+    textAlign: 'center'
     // flex: 1,
     // borderColor:'blue',
     // borderWidth: 1

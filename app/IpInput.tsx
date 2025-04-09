@@ -2,10 +2,16 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 import React, { useState, useEffect } from 'react';
 
 interface IIpInputProps {
-    passToParent: (value: string) => void;
+    passToParent: (data: IpInputData) => void,
+    initialData: IpInputData
 }
 
-const IpInput: React.FC<IIpInputProps> = ({passToParent}) => {
+export interface IpInputData {
+    value: string | null,
+    valid: boolean
+}
+
+const IpInput: React.FC<IIpInputProps> = ({passToParent, initialData}) => {
     const [text, setText] = useState<string>('');
     const [errorStrings, setErrorStrings] = useState<string[]>(['', '', '', '']);
 
@@ -59,11 +65,21 @@ const IpInput: React.FC<IIpInputProps> = ({passToParent}) => {
         return str;
     }
 
+    const checkValid = (value: string) : boolean => {
+        const octets = value.split('.');
+        return octets.length === 4 && errorStrings.every(str => str === '') ? true : false;
+    }
+
     const changeHandler = (value: string) => {
         const correctedValue = autoCorrect(value);
         setText(correctedValue);
-        passToParent(correctedValue);
+        passToParent({value: correctedValue, valid: checkValid(value)});
     }
+
+    useEffect(()=>{
+        if (initialData.value !== null)
+            setText(initialData.value);
+    }, [initialData])
 
     return (
         <View style={styles.container}>

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Audio } from "expo-av";
 import * as FileSystem from "expo-file-system";
+import { IpInputData } from './IpInput';
+import { PortInputData } from './PortInput';
 
 const RECORD_DURATION = 5000
 // get from:  `ipconfig getifaddr en0` on mac
@@ -15,8 +17,8 @@ interface Track {
 }
 
 interface ListenButtonProps {
-    ip: string | null,
-    port: number | null
+    ip: IpInputData,
+    port: PortInputData
 }
 
 const ListenButton: React.FC<ListenButtonProps> = ({ ip, port }) => {
@@ -26,7 +28,21 @@ const ListenButton: React.FC<ListenButtonProps> = ({ ip, port }) => {
     // const [sharePermission, requestSharePermission] = Sharing.;
     const [buttonText, setButtonText] = useState<string>('Start Listening');
 
+    const validInputs = () : boolean => {
+        let errorString = "";
+        if (ip.valid === null || ip.valid === false) 
+            errorString += "Invalid IP!";
+        if (port.valid === null || port.valid === false)
+            errorString += "\nInvalid Port!";
+        setButtonText(errorString);
+        return errorString.length > 0 ? false : true;
+    }
+
     const startRecording = async () => {
+        // check validity
+        if (!validInputs())
+            return;
+
         setButtonText("pressed")
         try {
             console.log("start recording");
@@ -134,8 +150,8 @@ const ListenButton: React.FC<ListenButtonProps> = ({ ip, port }) => {
     const sendSongToBot = async (track: Track) => {
         const timeout = 2000;
         try {
-            console.log("fetching", ip, port);
-            const response = await fetchWithTimeout(`http://${ip}:${port}`, {
+            console.log("fetching", ip.value, port.value);
+            const response = await fetchWithTimeout(`http://${ip.value}:${port.value}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
