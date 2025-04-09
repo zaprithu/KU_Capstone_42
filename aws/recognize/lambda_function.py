@@ -21,8 +21,21 @@ def lambda_handler(event, context):
         print("DECODED base64 string", len(audio_bytes))
 
         result = asyncio.run(recognize(audio_bytes))
-        print("got result", result)
-        result_data = json.loads(result['body']) 
+        print("got result", type(result), result)
+        # result_data = json.loads(result['body']) 
+        track = result['track']
+        print('track', track)
+        song_info = {
+          'song_name': track['title'],
+          'artist': track['subtitle']
+        }
+        print("\n\nreturning: ", song_info)
+        return {
+          "statusCode": 200,
+          "body": json.dumps({"track":song_info})
+        }
+        
+        return
         if len(result_data['result']["matches"]) == 0:
           return {
             "statusCode": 200,
@@ -30,10 +43,7 @@ def lambda_handler(event, context):
           }
         track_data = result_data['result']['track']
 
-        song_info = {
-          'song_name': track_data['title'],
-          'artist': track_data['subtitle']
-        }
+
         
   except Exception as e:
     print("Lambda error:", str(e))
@@ -61,7 +71,8 @@ def lambda_handler(event, context):
 async def recognize(audio_bytes):
   shazam = Shazam()
   result =  await shazam.recognize(audio_bytes)
-  return {
-    "statusCode": 200,
-    "body": json.dumps({"result": result})
-  }
+  return result
+  # return {
+  #   "statusCode": 200,
+  #   "body": json.dumps({"result": result})
+  # }
