@@ -2,12 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Audio } from "expo-av";
 import * as FileSystem from "expo-file-system";
-import * as Sharing from "expo-sharing";
 
-const RECORD_DURATION = 2500
 
+
+interface Track {
+    artist: string,
+    song_name: string
+}
+
+const RECORD_DURATION = 3000
 // get from:  `ipconfig getifaddr en0` on mac
-const LOCAL_IP = '10.104.161.193'
+const LOCAL_IP = '192.168.0.28'
 const PORT = 8080 // port running docker container for lambda function
 const LAMBDA_URL = `http://${LOCAL_IP}:${PORT}/2015-03-31/functions/function/invocations`
 
@@ -49,9 +54,14 @@ const ListenButton: React.FC = () => {
     }
 
     const stopAndUploadRecording = async (currentRecording: Audio.Recording) => {
-        if (!currentRecording) return;
+        if (!currentRecording)
+            return;
 
         currentRecording.stopAndUnloadAsync();
+
+        console.log("Stopping");
+        setButtonText("Stopping");
+
         await Audio.setAudioModeAsync(
             {
                 allowsRecordingIOS: false,
@@ -61,45 +71,65 @@ const ListenButton: React.FC = () => {
         setRecording(null);
 
         if (uri) {
-            const base64 = await FileSystem.readAsStringAsync(uri, {
-                encoding: FileSystem.EncodingType.Base64,
+            fetchSongInfo(uri);
+        } else {
+            Alert.alert("Error", "Recording failed.");
+        }
+    }
+
+    const fetchSongInfo = async (uri: string) => {
+        console.log("Preparing Audio");
+        setButtonText("Preparing Audio");
+
+        const base64 = await FileSystem.readAsStringAsync(uri, {
+            encoding: FileSystem.EncodingType.Base64,
+        });
+
+        try {
+            const payload = JSON.stringify({
+                file: base64,
+            });
+            console.log("Uploading");
+            setButtonText("Uploading");
+            const response = await fetch(LAMBDA_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
             });
 
-            console.log("base64", typeof(base64), base64)
+            const json = await response.json();
+            const data = JSON.parse(json.body);
+            const track: Track = data.track;
 
-            try {
-                const payload = JSON.stringify({
-                    file: base64, 
-                  });
-                const response = await fetch(LAMBDA_URL, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(payload),
-                });
-                // console.log("got data")
-                const text = await response.text(); 
-                // console.log("Raw response:", text);
-                const data = JSON.parse(text); 
-                // console.log("data:", data);
-                const parsedData = JSON.parse(data.body);
-                // console.log("parsedData", parsedData);
+            console.log("TRACK", track);
+            setButtonText(`${track.song_name} by ${track.artist}`);
 
-                // Extract song title and artist
-                const songName: string = parsedData.track.artist;
-                const artist: string = parsedData.track.song_name;
+            sendSongToBot(track);
 
-                console.log(`Song: ${songName}, Artist: ${artist}`);
-                setButtonText(`Song: ${songName}, Artist: ${artist}`)
-            } catch (error) {
-                console.error("ERROR!", error)
-            }
-
+        } catch (error) {
+            console.error("ERROR!", error)
+            setButtonText("ERROR")
         }
+    }
 
-        if (!uri) {
-            Alert.alert("Error", "Recording failed.");
+    const sendSongToBot = async (track: Track) => {
+
+        const response = await fetch(`http://${LOCAL_IP}:5555`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(track),
+        });
+
+        const data = await response.json();
+
+        if (data.artist == track.artist && data.song_name === track.song_name) {
+            setButtonText(`Dancing to '${track.song_name}' by ${track.artist}`)
+        } else {
+            setButtonText("ERROR sending track to robot!s")
         }
     }
 
