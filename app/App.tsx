@@ -51,7 +51,7 @@ const App: React.FC = () => {
         </View>
 
         <View style={styles.buttonContainer}>
-          <ListenButton/>
+          <ListenButton ip={serverIpAddr} port={serverPort}/>
         </View>
 
 
@@ -119,6 +119,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     width: 200,
     height: 200,
+    textAlign:'center'
     // flex: 1,
     // borderColor:'blue',
     // borderWidth: 1
