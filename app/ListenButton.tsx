@@ -13,7 +13,8 @@ const LAMBDA_URL = `http://${LOCAL_IP}:${PORT}/2015-03-31/functions/function/inv
 
 interface Track {
     artist: string,
-    song_name: string
+    song_name: string,
+    genre?: string
 }
 
 interface ListenButtonProps {
@@ -122,6 +123,7 @@ const ListenButton: React.FC<ListenButtonProps> = ({ ip, port }) => {
             const data = JSON.parse(json.body);
             const track: Track = data.track;
 
+
             console.log("TRACK", track);
             setButtonText(`${track.song_name} by ${track.artist}`);
 
@@ -165,7 +167,9 @@ const ListenButton: React.FC<ListenButtonProps> = ({ ip, port }) => {
 
             const data = await response.json();
 
-            if (data.artist == track.artist && data.song_name === track.song_name) {
+            if (data.artist == track.artist 
+                && data.song_name === track.song_name
+                && data.genre === track.genre) {
                 setButtonText(`Dancing to '${track.song_name}' by ${track.artist}`)
             } else {
                 setButtonText("ERROR sending track to robot!s")

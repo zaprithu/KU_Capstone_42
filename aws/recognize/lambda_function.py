@@ -27,7 +27,8 @@ def lambda_handler(event, context):
         print('track', track)
         song_info = {
           'song_name': track['title'],
-          'artist': track['subtitle']
+          'artist': track['subtitle'],
+          'genre': track['genres']['primary']
         }
         print("\n\nreturning: ", song_info)
         return {

@@ -45,10 +45,11 @@ class EchoHandler(SocketServer.BaseRequestHandler):
         
         song_name = body_dict.get("song_name")
         artist = body_dict.get("artist")
+        genre = body_dict.get("genre")
         
-        print("Track stripped: Artist: {}, Song Name: {}".format(artist, song_name))
+        print("Track stripped: Artist: {}, Song Name: {}, Genre: {}".format(artist, song_name, genre))
 
-        body = '{{ "artist": "{}", "song_name": "{}" }}'.format(artist, song_name)
+        body = '{{ "artist": "{}", "song_name": "{}", "genre": "{}" }}'.format(artist, song_name, genre)
         response = "HTTP/1.1 200 OK\r\n" \
                 "Content-Type: application/json\r\n" \
                 "Content-Length: {}\r\n" \
