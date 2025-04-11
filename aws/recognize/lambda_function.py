@@ -2,14 +2,45 @@ import asyncio
 from shazamio import Shazam
 import json
 import base64
+import subprocess
+import os
+import platform
+
+def check_ffmpeg():
+    try:
+        # Adjust the path if necessary, e.g., for layers /opt/bin/ffmpeg
+        result = subprocess.run(['/usr/local/bin/ffmpeg', '-version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        
+        # Check if the command was successful
+        if result.returncode == 0:
+            print("FFmpeg is available")
+            print(result.stdout.decode())  # Print version info
+        else:
+            print("FFmpeg is not available")
+            print(result.stderr.decode())  # Print error if FFmpeg is not found
+    except FileNotFoundError:
+        print("FFmpeg is not installed or not in the expected location")
+
+# Example invocation
+
 
 def lambda_handler(event, context):
-  # print("Event Received:", type(event), event)
-  try:
-        event_dict = body = json.loads(event)
-        print("keys",event_dict.keys())
-            
-        base64_audio = body.get("file") 
+    print("Event Received (2):", type(event))
+    os.environ["PATH"] += os.pathsep + "/usr/local/bin"
+    print("Architecture:", platform.machine())
+    
+    check_ffmpeg()
+    try:
+        print("event type, keys",type(event),event.keys())
+        
+        body = event.get('body')
+        
+        print("body type, value", type(body), body)
+        body_dict = json.loads(body)
+        print("body_dict type, value", type(body_dict), body_dict)
+        file_dict = json.loads(body_dict)
+        print("file_dict", type(file_dict), file_dict)
+        base64_audio = file_dict.get("file") 
 
         if not base64_audio:
             return {
@@ -31,6 +62,7 @@ def lambda_handler(event, context):
           'genre': track['genres']['primary']
         }
         print("\n\nreturning: ", song_info)
+        
         return {
           "statusCode": 200,
           "body": json.dumps({"track":song_info})
@@ -46,34 +78,19 @@ def lambda_handler(event, context):
 
 
         
-  except Exception as e:
-    print("Lambda error:", str(e))
+    except Exception as e:
+      print("Lambda error:", str(e))
+      return {
+          "statusCode": 500,
+          "body": json.dumps({"error": "Internal Server Error", "details": str(e)})
+      }
+      
     return {
-        "statusCode": 500,
-        "body": json.dumps({"error": "Internal Server Error", "details": str(e)})
+      "statusCode": 200,
+      "body": json.dumps({"track":song_info})
     }
 
-  # try:
-  #   # audio_bytes = base64.b64decode('output.wav')
-    
-    
-  
-  # except Exception as e:
-  #   return {
-  #       "statusCode": 500,
-  #       "body": f"Error: {str(e)}"
-  #   }
-
-  return {
-    "statusCode": 200,
-    "body": json.dumps({"track":song_info})
-  }
-
 async def recognize(audio_bytes):
-  shazam = Shazam()
-  result =  await shazam.recognize(audio_bytes)
-  return result
-  # return {
-  #   "statusCode": 200,
-  #   "body": json.dumps({"result": result})
-  # }
+    shazam = Shazam()
+    result =  await shazam.recognize(audio_bytes)
+    return result

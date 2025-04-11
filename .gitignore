@@ -1,6 +1,7 @@
 .DS_Store
 
 aws/recognize/pkg
+aws/update
 hello-world
 test
 package
