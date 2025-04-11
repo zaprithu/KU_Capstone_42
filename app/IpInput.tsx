@@ -33,15 +33,15 @@ const IpInput: React.FC<IIpInputProps> = ({passToParent, initialData}) => {
             }
 
             // remove leading zeros in octet
-            if (octet.length == 3) {
-                let chars = [...octet];
-                chars.slice(0, -1).forEach((char, index, arr) => {
-                    if (char == '0') {
-                        chars.shift();
-                    }
-                });
-                octets[index] = chars.join();
-            }
+            // if (octet.length == 3) {
+            //     let chars = [...octet];
+            //     chars.slice(0, -1).forEach((char, index, arr) => {
+            //         if (char == '0') {
+            //             chars.shift();
+            //         }
+            //     });
+            //     octets[index] = chars.join();
+            // }
         });
 
         if (octets.length > 4) {
