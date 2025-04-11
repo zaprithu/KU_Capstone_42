@@ -8,8 +8,9 @@ import { PortInputData } from './PortInput';
 const RECORD_DURATION = 5000
 // get from:  `ipconfig getifaddr en0` on mac
 const LOCAL_IP = '192.168.0.28'
-const PORT = 8080 // port running docker container for lambda function
-const LAMBDA_URL = `http://${LOCAL_IP}:${PORT}/2015-03-31/functions/function/invocations`
+const PORT = 9000 // port running docker container for lambda function
+// const LAMBDA_URL = `http://${LOCAL_IP}:${PORT}/2015-03-31/functions/function/invocations`
+const LAMBDA_URL = 'https://37qt21yyni.execute-api.us-east-2.amazonaws.com/Prog/recognize'
 
 interface Track {
     artist: string,
@@ -29,9 +30,9 @@ const ListenButton: React.FC<ListenButtonProps> = ({ ip, port }) => {
     // const [sharePermission, requestSharePermission] = Sharing.;
     const [buttonText, setButtonText] = useState<string>('Start Listening');
 
-    const validInputs = () : boolean => {
+    const validInputs = (): boolean => {
         let errorString = "";
-        if (ip.valid === null || ip.valid === false) 
+        if (ip.valid === null || ip.valid === false)
             errorString += "Invalid IP!";
         if (port.valid === null || port.valid === false)
             errorString += "\nInvalid Port!";
@@ -118,9 +119,9 @@ const ListenButton: React.FC<ListenButtonProps> = ({ ip, port }) => {
                 },
                 body: JSON.stringify(payload),
             });
-
-            const json = await response.json();
-            const data = JSON.parse(json.body);
+            console.log("response", response);
+            const data = await response.json();
+            console.log("data", data);
             const track: Track = data.track;
 
 
@@ -167,7 +168,7 @@ const ListenButton: React.FC<ListenButtonProps> = ({ ip, port }) => {
 
             const data = await response.json();
 
-            if (data.artist == track.artist 
+            if (data.artist == track.artist
                 && data.song_name === track.song_name
                 && data.genre === track.genre) {
                 setButtonText(`Dancing to '${track.song_name}' by ${track.artist}`)
@@ -191,33 +192,33 @@ const ListenButton: React.FC<ListenButtonProps> = ({ ip, port }) => {
         }
     }
 
-        return (
-            <>
-                <TouchableOpacity style={styles.listenButton} onPress={startRecording}>
-                    <Text style={styles.listenButtonText}>{buttonText}</Text>
-                </TouchableOpacity>
-            </>
-        );
+    return (
+        <>
+            <TouchableOpacity style={styles.listenButton} onPress={startRecording}>
+                <Text style={styles.listenButtonText}>{buttonText}</Text>
+            </TouchableOpacity>
+        </>
+    );
 
 
-    }
+}
 
-    const styles = StyleSheet.create({
-        listenButton: {
-            flex: 1,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: '#2bd659',
-            height: 200,
-            width: 200,
-            borderRadius: 100,
-            padding: 20,
-        },
-        listenButtonText: {
-            fontSize: 20,
-            fontWeight: 'bold',
-            textAlign: 'center'
-        },
-    });
+const styles = StyleSheet.create({
+    listenButton: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#2bd659',
+        height: 200,
+        width: 200,
+        borderRadius: 100,
+        padding: 20,
+    },
+    listenButtonText: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        textAlign: 'center'
+    },
+});
 
-    export default ListenButton;
+export default ListenButton;
