@@ -1,0 +1,74 @@
+import SocketServer
+import json
+import signal
+import sys
+IP = '10.117.35.142'
+PORT = 9571
+genre = "test"
+
+class Track:
+    def __init__(self, artist, song_name):
+        self.artist = artist
+        self.song_name = song_name
+
+    def to_dict(self):
+        return {
+            "artist": self.artist,
+            "song_name": self.song_name
+        }
+
+class EchoHandler(SocketServer.BaseRequestHandler):
+    def handle(self):
+        # Read the request data
+        request_data = ''
+        headers = ''
+        body = ''
+        while True:
+            data = self.request.recv(1024)
+            self.log("got data")
+            if not data:
+                break
+            headers += data.decode('utf-8')
+            if '}' in data.decode('utf-8'):
+                break
+
+        headers, body = headers.split('\r\n\r\n')
+
+        body_dict = json.loads(body)
+
+        song_name = body_dict.get("song_name")
+        artist = body_dict.get("artist")
+        global genre
+        genre = body_dict.get("genre")
+
+        body = '{{ "artist": "{}", "song_name": "{}", "genre": "{}" }}'.format(artist, song_name, genre)
+        response = "HTTP/1.1 200 OK\r\n" \
+                "Content-Type: application/json\r\n" \
+                "Content-Length: {}\r\n" \
+                "Connection: close\r\n" \
+                "\r\n" \
+                "{}".format(len(body), body)
+
+        self.request.sendall(response)
+
+
+class MyClass(GeneratedClass):
+    def __init__(self):
+        GeneratedClass.__init__(self)        
+    
+    def onLoad(self):
+        pass
+
+    def onUnload(self):
+        #put clean-up code here
+        pass
+
+    def onInput_onStart(self):
+        server = SocketServer.TCPServer((IP, PORT), EchoHandler)
+        server.handle_request()
+        self.log("sent response:" + genre)
+        self.onStopped(genre)
+        pass
+
+    def onInput_onStop(self):
+        self.onUnload() #it is recommended to reuse the clean-up as the box is stopped
